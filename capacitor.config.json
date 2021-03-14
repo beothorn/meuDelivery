@@ -1,0 +1,13 @@
+{
+  "appId": "br.com.isageek.meudelivery",
+  "appName": "meudelivery",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  },
+  "cordova": {}
+}
