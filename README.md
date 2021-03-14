@@ -18,3 +18,5 @@ Esse software é gratuito. Não há suporte, atendimento ou canal para reclamaç
 Os desenvolvedores não são responsáveis por qualquer dano ou prejuízo causado pelo uso do app.
 
 Use por sua conta e risco.
+
+O código está disponível sob a licença Apache 2
