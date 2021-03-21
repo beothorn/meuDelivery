@@ -9,3 +9,9 @@ test('Render list of messages', () => {
     expect(screen.getByText("First")).toBeInTheDocument()
     expect(screen.getByText("Second")).toBeInTheDocument()
 })
+
+test('Render empty messages', () => {
+    const msgs: Array<string> = []
+    render(<ReceivedMessages messages={msgs} />)
+    expect(screen.getByText("Sem mensagens")).toBeInTheDocument()
+})
