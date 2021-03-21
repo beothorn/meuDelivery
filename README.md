@@ -20,3 +20,15 @@ Os desenvolvedores não são responsáveis por qualquer dano ou prejuízo causad
 Use por sua conta e risco.
 
 O código está disponível sob a licença Apache 2
+
+# Tecnologías
+
+Renderização dos componentes usando [react](). 
+
+Module bundling com [webpack](https://webpack.js.org/)
+
+Cada componente tem entrada e saída reativa, usando [RxJs](https://rxjs-dev.firebaseapp.com/).
+
+Multiplataforma para android e pc com [Capacitor](https://capacitorjs.com/)
+
+Bot usando telegram e a [API de bos](https://core.telegram.org/bots/api)
