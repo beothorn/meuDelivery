@@ -1,3 +1,3 @@
-import TokenInput from './TokenInput';
+import Main from './screens/Main';
 
-TokenInput()
+Main()
