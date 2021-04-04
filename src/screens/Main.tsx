@@ -8,7 +8,7 @@ import { Connection, Input, plug, unplug } from '../reactHub/Hub';
 let count = 0
 
 const Main = () => {
-    const messages: Observable<any> = Observable.create((observer: any) => {
+    const messages: Observable<any> = new Observable((observer: any) => {
         setInterval(() => {
             if(count < 10)
                 observer.next("Hello "+count)

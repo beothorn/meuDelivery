@@ -23,7 +23,10 @@ const updateState: (name: string, newProps: any) => void  = (name, newProps) => 
     const rendered = Object.entries(hub).map(
         ([key, value]) => {
             if(value.renderer){
-                return <value.renderer {...allProps[key]} />
+                return <value.renderer 
+                key = {key}
+                {...allProps[key]} 
+                />
             }
         }
     )
