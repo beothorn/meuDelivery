@@ -7,12 +7,29 @@ interface Input {
     sourceSubscriber: any;
 }
 
-interface Connection {
+interface Output {
+    name: string;
+    outputObservable: Observable<any>;
+}
+
+interface Renderable{
+    props: Observable<any>;
+    renderer: React.FunctionComponent;
+}
+
+interface NewConnection {
     name: string;
     props?: Observable<any>;
     renderer?: React.FunctionComponent;
     inputs?: Input[];
-    output?: Observable<any>;
+    outputs?: Output[];
+}
+
+interface Connection {
+    props?: Observable<any>;
+    renderer?: React.FunctionComponent;
+    inputs: {[name: string]: Observable<any>};
+    outputs: {[name: string]: Observable<any>};
 }
 
 const hub:{[name: string]: Connection} = {}
@@ -38,10 +55,22 @@ const updateState: (name: string, newProps: any) => void  = (name, newProps) => 
     )
 }
 
-const plug: (connection: Connection) => void = (connection) => {
+const plug: (connection: NewConnection) => void = (connection) => {
+
+    let newInputs: {[name: string]: Observable<any>} = {}
+    let newOutputs: {[name: string]: Observable<any>} = {}
+
     if(connection.inputs){
         for(let i of connection.inputs){
-            hub[i.source].output.subscribe(i.sourceSubscriber)
+            let [componentName, inputName] = i.source.split(":");
+            let componentSrc = hub[componentName]
+            componentSrc.outputs[inputName].subscribe(i.sourceSubscriber)
+            newInputs[inputName] = i.sourceSubscriber
+        }
+    }
+    if(connection.outputs){
+        for(let o of connection.outputs){
+            newOutputs[o.name] = o.outputObservable
         }
     }
     if(connection.props){
@@ -50,7 +79,12 @@ const plug: (connection: Connection) => void = (connection) => {
         })
     }
 
-    hub[connection.name] = connection
+    hub[connection.name] = {
+        props: connection.props,
+        renderer: connection.renderer,
+        inputs: newInputs,
+        outputs: newOutputs
+    }
 }
 
 const unplug: (componentOutput: string) => TimerHandler = (componentOutput) => {

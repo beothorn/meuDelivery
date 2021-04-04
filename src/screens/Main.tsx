@@ -18,8 +18,11 @@ const Main = () => {
 
     plug({
         name: "Messages",
-        output: messages
-    } as Connection)
+        outputs: [{
+            name: "msgsReceived",
+            outputObservable: messages
+        }]
+    })
     
     const messagesLog: string[] = []
     const messagesLogProps = new Subject()
@@ -27,24 +30,24 @@ const Main = () => {
     plug({
         name: "MessagesDisplay",
         inputs: [{
-            source: "Messages",
+            source: "Messages:msgsReceived",
             sourceSubscriber: (msg: string) => {
                 messagesLog.push(msg)
                 messagesLogProps.next({
                     "messages": messagesLog
                 })
             }
-        } as Input],
+        }],
         props: messagesLogProps,
         renderer: ReceivedMessages
-    } as Connection)
+    })
 
     setTimeout( unplug("MessagesDisplay") , 10000)
 
     plug({
         name: "BotToken",
         renderer: BotToken
-    } as Connection)
+    })
 }
 
 export default Main
