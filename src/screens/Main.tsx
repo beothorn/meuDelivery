@@ -2,63 +2,17 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import BotToken from './settings/botToken/BotToken';
 import ReceivedMessages from './receivedMessages/ReceivedMessages';
-import Widget from './Widget';
 import { Observable, Subject } from 'rxjs';
+import { Connection, Input, plug, unplug } from '../reactHub/Hub';
 
-interface Input {
-    source: string;
-    sourceSubscriber: any;
-}
-
-interface Connection {
-    name: string;
-    props?: Observable<any>;
-    renderer?: React.FunctionComponent;
-    inputs?: Input[];
-    output?: Observable<any>;
-}
-
-
-
-const hub:{[name: string]: Connection} = {}
-const allProps: {[name: string]: any} = {}
-
-const updateState: (name: string, newProps: any) => void  = (name, newProps) => {
-    allProps[name] = newProps
-    const rendered = Object.entries(hub).map(
-        ([key, value]) => {
-            if(value.renderer){
-                return value.renderer(allProps[key])
-            }
-        }
-    )
-    ReactDOM.render(
-        <React.StrictMode>
-            {rendered}
-        </React.StrictMode>,
-        document.getElementById('main')
-    )
-}
-
-const plug: (connection: Connection) => void = (connection) => {
-    if(connection.inputs){
-        for(let i of connection.inputs){
-            hub[i.source].output.subscribe(i.sourceSubscriber)
-        }
-    }
-    if(connection.props){
-        connection.props.subscribe((state: any) => {
-            updateState(connection.name, state)
-        })
-    }
-
-    hub[connection.name] = connection
-}
+let count = 0
 
 const Main = () => {
     const messages: Observable<any> = Observable.create((observer: any) => {
         setInterval(() => {
-            observer.next("Hello")
+            if(count < 10)
+                observer.next("Hello "+count)
+            count++
         }, 2000)
     })
 
@@ -84,6 +38,8 @@ const Main = () => {
         props: messagesLogProps,
         renderer: ReceivedMessages
     } as Connection)
+
+    setTimeout( unplug("MessagesDisplay") , 10000)
 
     plug({
         name: "BotToken",
