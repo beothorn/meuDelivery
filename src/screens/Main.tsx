@@ -1,13 +1,13 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import BotToken from './settings/botToken/BotToken';
 import ReceivedMessages from './receivedMessages/ReceivedMessages';
 import { Observable, Subject } from 'rxjs';
-import { Connection, Input, plug, unplug } from '../reactHub/Hub';
+import { Connection, Input, Hub } from '../reactHub/Hub';
 
 let count = 0
 
 const Main = () => {
+    const hub = new Hub()
+
     const messages: Observable<any> = new Observable((observer: any) => {
         setInterval(() => {
             if(count < 10)
@@ -16,7 +16,7 @@ const Main = () => {
         }, 2000)
     })
 
-    plug({
+    hub.plug({
         name: "Messages",
         outputs: [{
             name: "msgsReceived",
@@ -27,7 +27,7 @@ const Main = () => {
     const messagesLog: string[] = []
     const messagesLogProps = new Subject()
 
-    plug({
+    hub.plug({
         name: "MessagesDisplay",
         inputs: [{
             source: "Messages:msgsReceived",
@@ -38,15 +38,20 @@ const Main = () => {
                 })
             }
         }],
-        props: messagesLogProps,
-        renderer: ReceivedMessages
+        
+        renderer: {
+            props: messagesLogProps,
+            functionComponent: ReceivedMessages
+        }
     })
 
-    setTimeout( unplug("MessagesDisplay") , 10000)
+    setTimeout( hub.unplug("MessagesDisplay") , 10000)
 
-    plug({
+    hub.plug({
         name: "BotToken",
-        renderer: BotToken
+        renderer: {
+            functionComponent: BotToken
+        }
     })
 }
 
