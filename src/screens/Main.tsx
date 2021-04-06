@@ -1,7 +1,7 @@
 import BotToken from './settings/botToken/BotToken';
 import ReceivedMessages from './receivedMessages/ReceivedMessages';
 import { Observable, Subject } from 'rxjs';
-import { Connection, Input, Hub } from '../reactHub/Hub';
+import { Hub } from '../reactHub/Hub';
 
 let count = 0
 

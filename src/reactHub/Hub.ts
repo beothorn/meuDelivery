@@ -32,15 +32,8 @@ interface Connection {
 
 type Renderer = (components:{[name: string]: React.FunctionComponent}, props: {[name: string]: any}) => void;
 
-const defaultRenderer: Renderer = (components, props) => {
-    ReactDOM.render(
-        HubComponent({
-            renderers:components,
-            allProps: props
-        }),
-        document.getElementById('main')
-    )
-}
+const defaultRenderer: Renderer = (components, props) => 
+    ReactDOM.render( HubComponent({ components, props }), document.getElementById('main'))
 
 class Hub {
     connections:{[name: string]: Connection} = {};
