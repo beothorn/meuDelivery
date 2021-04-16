@@ -1,11 +1,12 @@
 import * as React from "react"
 
 const HubComponent:React.FunctionComponent<{ 
-        components: {[name: string]: React.FunctionComponent} ,
-        props: {[name: string]: any}
+        components: Map<string, React.FunctionComponent> ,
+        props: Map<string, any>
     }> = ({ components, props }) => {    
-    const rendered = Object.entries(components).map(
-        ([key, C]) => <C key = {key} {...props[key]} />
+    const rendered: React.ReactElement[] = []
+    components.forEach( (Component, key) => 
+        rendered.push(<Component key={key} {...(props.get(key))} />)
     )
     return <React.StrictMode> {rendered} </React.StrictMode>
 }

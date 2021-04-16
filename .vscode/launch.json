@@ -10,13 +10,21 @@
 			"request": "launch",
 			"url": "http://localhost:8080/index.html",
             "runtimeExecutable": "/usr/bin/google-chrome",
-			"webRoot": "${workspaceRoot}/",
+			"webRoot": "${workspaceRoot}/www",
 			"sourceMaps": true,
 			"preLaunchTask": "start",
 			"userDataDir": "${workspaceRoot}/.tempChromeProfileForDebug",
 			"runtimeArgs": [
 				"--enable-unsafe-es3-apis"
 			]
-		}
+		},
+		{
+            "name": "Debug Jest Tests",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": ["--inspect-brk", "${workspaceRoot}/node_modules/.bin/jest", "--runInBand"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        }
     ]
 }

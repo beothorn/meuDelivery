@@ -5,15 +5,20 @@ import '@testing-library/jest-dom'
 
 test('Render all components', () => {
     let component: React.FunctionComponent<any> = ({val}) => <p>{val}</p>
+
+    let components = new Map(Object.entries({ 
+        "a": component,
+        "b": component
+    }));
+
+    let props = new Map(Object.entries({ 
+        "a": {"val": "Foo"},
+        "b": {"val": "Bar"}
+    }));
+
     render(<HubComponent 
-        components={{ 
-            "a": component,
-            "b": component
-        }} 
-        props={{
-            "a": {"val": "Foo"},
-            "b": {"val": "Bar"}
-        }}
+        components={components} 
+        props={props}
     />)
     expect(screen.getByText("Foo")).toBeInTheDocument()
     expect(screen.getByText("Bar")).toBeInTheDocument()

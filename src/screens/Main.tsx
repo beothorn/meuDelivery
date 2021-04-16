@@ -45,7 +45,7 @@ const Main = () => {
         }
     })
 
-    setTimeout( hub.unplug("MessagesDisplay") , 10000)
+    setTimeout( () => hub.unplug("MessagesDisplay") , 10000)
 
     hub.plug({
         name: "BotToken",
