@@ -5,12 +5,12 @@ import HubComponent from './HubComponent'
 
 
 interface OutputConnection {
-    source: Observable<any>,
+    outputObservable: Observable<any>,
     subscriptions: Connection[]
 }
 
 interface InputConnection {
-    subscriber: Observer<any>,
+    inputSubscriber: Observer<any>,
     subscription: Subscription
 }
 
@@ -22,35 +22,35 @@ interface Connection {
 
 type Connections =  Map<string, Connection>;
 
-interface Input {
-    source: string;
-    sourceSubscriber: any;
-}
-
-interface Output {
-    name: string;
-    outputObservable: Observable<any>;
-}
-
 interface Renderable{
     props?: Observable<any>;
     functionComponent: React.FunctionComponent<any>;
 }
 
-interface PlugSettings {
+interface PlugConfig {
     name: string;
     renderer?: Renderable;
-    inputs?: Input[];
-    outputs?: Output[];
+    inputs?: {
+        source: string;
+        inputSubscriber: any;
+    }[];
+    outputs?: {
+        name: string;
+        outputObservable: Observable<any>;
+    }[];
 }
 
 type Renderer = (components: Map<string, React.FunctionComponent>, props: Map<string, any>) => void;
 
 const defaultRenderer: Renderer = (components, props) => 
-    ReactDOM.render( HubComponent({ components, props }), document.getElementById('main'))
+    ReactDOM.render( 
+        HubComponent({ components, props }), 
+        document.getElementById('main')
+    )
 
-const splitOutputName: (outputName: string) => string[] = (outputName: string) => outputName.split(":")
-const joinOutputName: (componentName: string, outputName: string) => string = (componentName, outputName) => `${componentName}:${outputName}`
+const outputNameSeparatot = ":"
+const splitOutputName: (outputName: string) => string[] = (outputName) => outputName.split(outputNameSeparatot)
+const joinOutputName: (componentName: string, outputName: string) => string = (componentName, outputName) => `${componentName}${outputNameSeparatot}${outputName}`
 
 class Hub {
     connections: Connections = new Map()
@@ -62,32 +62,38 @@ class Hub {
         this.aggregator = aggregator;
     }
 
-    print: () => void = () => {
-        let out = this.connections.size == 0 ? "No connections" : ""
+    description: () => Map<string, any> = () => {
+        const descriptionObj: Map<string, {
+            inputs: any[],
+            outputs: any[]
+        }> = new Map()
         this.connections.forEach((connection, connectionName) => {
-            out += connectionName + ":\n"
-            
-            out += connection.inputs.size == 0 ? "\tNo inputs\n" : ""
+            const inputs: any[] = []
             connection.inputs.forEach((inputConnectionSource, inputName) => {
-                out += `\tIn '${inputName}':\n`
                 inputConnectionSource.forEach((outputConnection, outputConnectionName) => {
-                    out += `\t\t${connectionName} <- ${inputName}:${outputConnectionName}\n`
+                    inputs.push([inputName, outputConnectionName])
                 })
             })
-
-            out += connection.outputs.size == 0 ? "\tNo outputs\n" : ""
+            const outputs: any[] = []
             connection.outputs.forEach((output, outputName) => {
-                out += `\tOut '${outputName}':\n`
-                out += output.subscriptions.length == 0 ? "\t\tNo outputs subscriptions\n" : ""
+                const out: any[] = [outputName]
+                const outListeners: any[] = []
                 output.subscriptions.forEach(s => {
-                    out += `\t\t${connectionName}:${outputName} -> ${s.name}\n`
+                    outListeners.push(s.name)
                 })
+                out.push(outListeners)
+                outputs.push(out)
+            })
+            descriptionObj.set(connectionName, {
+                inputs,
+                outputs
             })
         })
-        console.log(out)
+        
+        return descriptionObj
     }
 
-    plug: (connection: PlugSettings) => void = (newConnection) => {
+    plug: (connection: PlugConfig) => void = (newConnection) => {
         if(!this.connections.has(newConnection.name)){
             this.connections.set(newConnection.name, {
                 name: newConnection.name,
@@ -114,15 +120,15 @@ class Hub {
 
                 if(!connection.outputs.has(outputName)){
                     connection.outputs.set(outputName, {
-                        source: null,
+                        outputObservable: null,
                         subscriptions:[]
                     })
                 }
                 let outputConnection: OutputConnection = connection.outputs.get(outputName)
 
                 let subscription: Subscription = null
-                if(outputConnection.source){
-                    subscription = outputConnection.source.subscribe(input.sourceSubscriber)
+                if(outputConnection.outputObservable){
+                    subscription = outputConnection.outputObservable.subscribe(input.inputSubscriber)
                 }
                 outputConnection.subscriptions.push(currentConnection)
                 if(!currentConnection.inputs.has(outputComponentName)){
@@ -133,7 +139,7 @@ class Hub {
                     inputFor.get(outputName).subscription.unsubscribe()
                 }
                 inputFor.set(outputName, {
-                    subscriber: input.sourceSubscriber,
+                    inputSubscriber: input.inputSubscriber,
                     subscription: subscription
                 })
             }
@@ -152,8 +158,8 @@ class Hub {
                     //resubscribe output if available
                     for(let newOutput of newConnection.outputs){
                         if(newOutput.name === outputKey){
-                            outputValue.source = newOutput.outputObservable
-                            inputOnOtherConnectionForOutput.subscription = outputValue.source.subscribe(inputOnOtherConnectionForOutput.subscriber)
+                            outputValue.outputObservable = newOutput.outputObservable
+                            inputOnOtherConnectionForOutput.subscription = outputValue.outputObservable.subscribe(inputOnOtherConnectionForOutput.inputSubscriber)
                         }
                     }
                 })
@@ -162,7 +168,7 @@ class Hub {
             for(let o of newConnection.outputs){
                 if(!currentConnection.outputs.has(o.name)){
                     currentConnection.outputs.set(o.name, {
-                        source: o.outputObservable,
+                        outputObservable: o.outputObservable,
                         subscriptions: []
                     })
                 }
@@ -189,4 +195,4 @@ class Hub {
     size: () => number = () => this.connections.size
 }
 
-export { Input, Hub }
+export { Hub }

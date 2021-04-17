@@ -10,8 +10,7 @@ const Main = () => {
 
     const messages: Observable<any> = new Observable((observer: any) => {
         setInterval(() => {
-            if(count < 10)
-                observer.next("Hello "+count)
+            observer.next("Hello "+count)
             count++
         }, 2000)
     })
@@ -31,7 +30,7 @@ const Main = () => {
         name: "MessagesDisplay",
         inputs: [{
             source: "Messages:msgsReceived",
-            sourceSubscriber: (msg: string) => {
+            inputSubscriber: (msg: string) => {
                 messagesLog.push(msg)
                 messagesLogProps.next({
                     "messages": messagesLog
@@ -45,7 +44,7 @@ const Main = () => {
         }
     })
 
-    setTimeout( () => hub.unplug("MessagesDisplay") , 10000)
+    setTimeout( () => hub.unplug("MessagesDisplay") , 5000)
 
     hub.plug({
         name: "BotToken",

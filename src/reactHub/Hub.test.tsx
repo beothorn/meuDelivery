@@ -1,5 +1,5 @@
 import { Hub } from "./Hub"
-import { BehaviorSubject, Subject } from 'rxjs'
+import { BehaviorSubject, Subject, of } from 'rxjs';
 import * as React from 'react'
 import '@testing-library/jest-dom'
 
@@ -21,12 +21,97 @@ describe("Hub tests", () => {
             name: "ConsumerA",
             inputs: [{
                 source: "ProducerA:out",
-                sourceSubscriber: (data: any) => {
+                inputSubscriber: (data: any) => {
                     expect(data).toStrictEqual("Foo")
                     done()
                 }
             }]
         })
+    })
+
+    test("Description happy day", () => {
+
+        const hub = new Hub( () => null )
+
+        hub.plug({
+            name: "A",
+            outputs: [{
+                name: "outA",
+                outputObservable: of()
+            },{
+                name: "outA2",
+                outputObservable: of()
+            }],
+            inputs: [{
+                source: "B:outB",
+                inputSubscriber: null
+            },{
+                source: "C:outC",
+                inputSubscriber: null
+            }]
+        })
+
+        hub.plug({
+            name: "B",
+            outputs: [{
+                name: "outB",
+                outputObservable: of()
+            }],
+            inputs: [{
+                source: "A:outA",
+                inputSubscriber: null
+            }]
+        })
+
+        hub.plug({
+            name: "C",
+            outputs: [{
+                name: "outC",
+                outputObservable: of()
+            }],
+            inputs: [{
+                source: "A:outA",
+                inputSubscriber: null
+            },{
+                source: "A:outA2",
+                inputSubscriber: null
+            },{
+                source: "B:outB",
+                inputSubscriber: null
+            }]
+        })
+
+        const expectation = new Map()
+        expectation.set("A", {
+            inputs: [
+                ["B","outB"],
+                ["C","outC"]
+            ],
+            outputs: [
+                ["outA", ["B", "C"]],
+                ["outA2", ["C"]]
+            ]
+        })
+        expectation.set("B", {
+            inputs: [
+                ["A","outA"]
+            ],
+            outputs: [
+                ["outB", ["A", "C"]]
+            ]
+        })
+        expectation.set("C", {
+            inputs: [
+                ["A","outA"],
+                ["A","outA2"],
+                ["B","outB"],
+            ],
+            outputs: [
+                ["outC", ["A"]]
+            ]
+        })
+
+        expect(hub.description()).toStrictEqual(expectation)
     })
 
     test("Add Producer then Consumer then Producer with same name, no duplicated messages", done => {
@@ -50,7 +135,7 @@ describe("Hub tests", () => {
             name: "ConsumerB",
             inputs: [{
                 source: "ProducerB:out",
-                sourceSubscriber: (data: any) => {
+                inputSubscriber: (data: any) => {
                     expect(data).toStrictEqual("Foo")
                     done()
                 }
@@ -81,7 +166,7 @@ describe("Hub tests", () => {
             name: "ConsumerB",
             inputs: [{
                 source: "ProducerB:out",
-                sourceSubscriber: (data: any) => {
+                inputSubscriber: (data: any) => {
                     expect(data).toStrictEqual("Foo")
                     done()
                 }
@@ -119,7 +204,7 @@ describe("Hub tests", () => {
             name: "Consumer",
             inputs: [{
                 source: "Producer:out",
-                sourceSubscriber: (data: any) => {
+                inputSubscriber: (data: any) => {
                     if( data === "First call"){
                         firstCall = true
                         return
@@ -166,7 +251,7 @@ describe("Hub tests", () => {
             name: "Consumer",
             inputs: [{
                 source: "ProducerToUnplug:out",
-                sourceSubscriber: (data: any) => {
+                inputSubscriber: (data: any) => {
                     if( data === "First call"){
                         firstCall = true
                         return
@@ -216,7 +301,7 @@ describe("Hub tests", () => {
             inputs: [
                 {
                     source: "Producer1:out",
-                    sourceSubscriber: (data: any) => {
+                    inputSubscriber: (data: any) => {
                         expect(data).toStrictEqual("Foo")
                         count++
                         if(count == 2)
@@ -225,7 +310,7 @@ describe("Hub tests", () => {
                 },
                 {
                     source: "Producer2:out",
-                    sourceSubscriber: (data: any) => {
+                    inputSubscriber: (data: any) => {
                         expect(data).toStrictEqual("Bar")
                         count++
                         if(count == 2)
@@ -258,7 +343,7 @@ describe("Hub tests", () => {
             inputs: [
                 {
                     source: "Producer:out1",
-                    sourceSubscriber: (data: any) => {
+                    inputSubscriber: (data: any) => {
                         expect(data).toStrictEqual("Foo")
                         count++
                         if(count == 2)
@@ -267,7 +352,7 @@ describe("Hub tests", () => {
                 },
                 {
                     source: "Producer:out2",
-                    sourceSubscriber: (data: any) => {
+                    inputSubscriber: (data: any) => {
                         expect(data).toStrictEqual("Bar")
                         count++
                         if(count == 2)
@@ -278,7 +363,7 @@ describe("Hub tests", () => {
         })
     })
 
-    test('when changing props component will call renderer', done => {
+    test('When changing props component will call renderer', done => {
 
         let c: React.FunctionComponent<{ a: string }> = ({a}) => <p>{a}</p>
 
