@@ -24,6 +24,7 @@ type Connections =  Map<string, Connection>;
 
 interface Renderable{
     props?: Observable<any>;
+    subscription?: Subscription;
     functionComponent: React.FunctionComponent<any>;
 }
 
@@ -50,12 +51,12 @@ const defaultRenderer: Renderer = (components, props) =>
 
 const outputNameSeparatot = ":"
 const splitOutputName: (outputName: string) => string[] = (outputName) => outputName.split(outputNameSeparatot)
-const joinOutputName: (componentName: string, outputName: string) => string = (componentName, outputName) => `${componentName}${outputNameSeparatot}${outputName}`
 
 class Hub {
     connections: Connections = new Map()
     components: Map<string, React.FunctionComponent> = new Map()
-    props: Map<string, any> = new Map()
+    currentState: Map<string, any> = new Map()
+    propsObservables: Map<string, { source: Observable<any>, subscription: Subscription }> = new Map()
     aggregator: Renderer
 
     constructor(aggregator: Renderer = defaultRenderer) {
@@ -176,11 +177,17 @@ class Hub {
         }
         if(newConnection.renderer){
             this.components.set(newConnection.name, newConnection.renderer.functionComponent)
-            if(newConnection.renderer.props)
-                newConnection.renderer.props.subscribe((state: any) => {
-                    this.props.set(newConnection.name, state)
-                    this.aggregator(this.components, this.props)
+            if(newConnection.renderer.props){
+                const sub = newConnection.renderer.props.subscribe((state: any) => {
+                    this.currentState.set(newConnection.name, state)
+                    this.aggregator(this.components, this.currentState)
                 })
+
+                this.propsObservables.set(newConnection.name, {
+                    source: newConnection.renderer.props,
+                    subscription: sub
+                })
+            }
         }
     }
 
@@ -190,6 +197,15 @@ class Hub {
             s.inputs.get(componentName).forEach( s => s.subscription.unsubscribe())
         }))
         currentConnection.inputs.forEach(c => c.forEach( co => co.subscription.unsubscribe()  ))
+        this.currentState.delete(componentName)
+        this.components.delete(componentName)
+        if(this.propsObservables.has(componentName)){
+            const propsObservable = this.propsObservables.get(componentName)
+            propsObservable.subscription.unsubscribe()
+            this.propsObservables.delete(componentName)
+        }
+        
+        this.aggregator(this.components, this.currentState)
     }
 
     size: () => number = () => this.connections.size

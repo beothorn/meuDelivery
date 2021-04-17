@@ -382,4 +382,39 @@ describe("Hub tests", () => {
         })
 
     })
+
+    test.only('Unplugged connection should not render', done => {
+
+        let c: React.FunctionComponent<{ a: string }> = ({a}) => <p>{a}</p>
+
+        const propsOutput: Subject<any> = new Subject()
+
+        const hub = new Hub( (component, props) => {
+            if(component.size == 0 && props.size == 0) return
+            expect(component.get("Renderable")).toStrictEqual(c)
+            expect(props.get("Renderable")).toStrictEqual({a: "Should get this prop"})
+            done() 
+        } )
+
+        hub.plug({
+            name: "Renderable",
+            renderer: {
+                props: propsOutput,
+                functionComponent: c
+            }
+        })
+
+        hub.unplug("Renderable")
+
+        propsOutput.next({a: "Should not get this prop"})
+
+        hub.plug({
+            name: "Renderable",
+            renderer: {
+                props: propsOutput,
+                functionComponent: c
+            }
+        })
+        propsOutput.next({a: "Should get this prop"})
+    })
 })
